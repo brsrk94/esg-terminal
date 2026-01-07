@@ -135,7 +135,7 @@ export const EmissionMap = ({
 
   // Add heatmap layer function
   const addHeatmapLayer = () => {
-    if (!map.current || !map.current.isStyleLoaded()) return;
+    if (!map.current) return;
 
     // Remove existing source and layer if they exist
     if (map.current.getLayer('heatmap-layer')) {
@@ -199,7 +199,7 @@ export const EmissionMap = ({
 
   // Update heatmap data when facilities change
   useEffect(() => {
-    if (!map.current || !mapLoaded || !map.current.isStyleLoaded()) return;
+    if (!map.current || !mapLoaded) return;
 
     const source = map.current.getSource('emissions') as mapboxgl.GeoJSONSource;
     if (source) {
