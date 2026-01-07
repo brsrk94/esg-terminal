@@ -222,16 +222,13 @@ export const EmissionMap = ({
     }
   }, [showHeatmap, isCompanyFiltered, mapLoaded]);
 
-  // Add/update markers - only show when a company is filtered
+  // Add/update markers
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
     // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
-
-    // Only add markers when a company is filtered
-    if (!isCompanyFiltered) return;
 
     // Add markers for each facility
     filteredFacilities.forEach((facility) => {
@@ -244,7 +241,7 @@ export const EmissionMap = ({
       const el = document.createElement('div');
       el.className = 'facility-marker';
       
-      const baseSize = 16;
+      const baseSize = isCompanyFiltered ? 16 : 12;
       const size = isSelected ? baseSize + 8 : baseSize;
       
       const colors = {
