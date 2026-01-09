@@ -135,7 +135,7 @@ export const EmissionMap = ({
 
   // Add heatmap layer function
   const addHeatmapLayer = () => {
-    if (!map.current) return;
+    if (!map.current || !map.current.isStyleLoaded()) return;
 
     // Remove existing source and layer if they exist
     if (map.current.getLayer('heatmap-layer')) {
@@ -200,6 +200,19 @@ export const EmissionMap = ({
   // Update heatmap data when facilities change
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
+
+    // Wait for style to be loaded before adding layers
+    if (!map.current.isStyleLoaded()) {
+      map.current.once('style.load', () => {
+        const source = map.current?.getSource('emissions') as mapboxgl.GeoJSONSource;
+        if (source) {
+          source.setData(heatmapData);
+        } else {
+          addHeatmapLayer();
+        }
+      });
+      return;
+    }
 
     const source = map.current.getSource('emissions') as mapboxgl.GeoJSONSource;
     if (source) {
