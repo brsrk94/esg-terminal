@@ -5,18 +5,18 @@ import { useMemo } from 'react';
 
 interface StatsSidebarProps {
   selectedScope: string;
-  selectedCompany: string;
+  selectedCompanies: string[];
 }
 
-export const StatsSidebar = ({ selectedScope, selectedCompany }: StatsSidebarProps) => {
-  // Filter emission data based on selected scope and company
+export const StatsSidebar = ({ selectedScope, selectedCompanies }: StatsSidebarProps) => {
+  // Filter emission data based on selected scope and companies
   const filteredData = useMemo(() => {
     return emissionData.filter(record => {
       const matchesScope = selectedScope === 'all' || record.scope === selectedScope;
-      const matchesCompany = selectedCompany === 'all' || record.facilityName === selectedCompany;
+      const matchesCompany = selectedCompanies.length === 0 || selectedCompanies.includes(record.facilityName);
       return matchesScope && matchesCompany;
     });
-  }, [selectedScope, selectedCompany]);
+  }, [selectedScope, selectedCompanies]);
 
   // Calculate company totals from filtered data
   const companyData = useMemo(() => {

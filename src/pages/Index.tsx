@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState('all');
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
   const [selectedScope, setSelectedScope] = useState('all');
   const [selectedFacility, setSelectedFacility] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -50,8 +50,8 @@ const Index = () => {
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        selectedCompany={selectedCompany}
-        onCompanyChange={setSelectedCompany}
+        selectedCompanies={selectedCompanies}
+        onCompaniesChange={setSelectedCompanies}
         selectedScope={selectedScope}
         onScopeChange={setSelectedScope}
         companies={companies}
@@ -68,7 +68,7 @@ const Index = () => {
               selectedFacility={selectedFacility}
               onFacilitySelect={handleFacilitySelect}
               searchQuery={searchQuery}
-              selectedCompany={selectedCompany}
+              selectedCompanies={selectedCompanies}
             />
           </div>
 
@@ -84,7 +84,7 @@ const Index = () => {
 
         {/* Stats Sidebar (Desktop) */}
         <div className="hidden xl:block w-[300px]">
-          <StatsSidebar selectedScope={selectedScope} selectedCompany={selectedCompany} />
+          <StatsSidebar selectedScope={selectedScope} selectedCompanies={selectedCompanies} />
         </div>
       </div>
 
@@ -119,7 +119,7 @@ const Index = () => {
       {showSidebar && (
         <div className="xl:hidden fixed inset-0 z-30 bg-background/95 backdrop-blur-sm">
           <div className="h-full overflow-auto pt-16">
-            <StatsSidebar selectedScope={selectedScope} selectedCompany={selectedCompany} />
+            <StatsSidebar selectedScope={selectedScope} selectedCompanies={selectedCompanies} />
           </div>
           <Button
             variant="ghost"

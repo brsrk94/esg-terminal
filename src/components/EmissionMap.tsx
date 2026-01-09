@@ -9,7 +9,7 @@ interface EmissionMapProps {
   selectedFacility: string | null;
   onFacilitySelect: (facilityId: string) => void;
   searchQuery: string;
-  selectedCompany: string;
+  selectedCompanies: string[];
 }
 
 export const EmissionMap = ({
@@ -17,7 +17,7 @@ export const EmissionMap = ({
   selectedFacility,
   onFacilitySelect,
   searchQuery,
-  selectedCompany,
+  selectedCompanies,
 }: EmissionMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -32,21 +32,28 @@ export const EmissionMap = ({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(true);
 
-  // Check if a specific company is selected
-  const isCompanyFiltered = selectedCompany !== 'all';
+  // Check if any company is selected (via dropdown or search)
+  const hasCompanyFilter = selectedCompanies.length > 0 || searchQuery.trim().length > 0;
 
   // Filter facilities based on search and company selection
   const filteredFacilities = useMemo(() => {
+    if (!hasCompanyFilter) return [];
+    
     return facilities.filter((facility) => {
-      const matchesSearch =
-        !searchQuery ||
-        facility.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        facility.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCompany =
-        selectedCompany === 'all' || facility.name === selectedCompany;
-      return matchesSearch && matchesCompany;
+      // Check search query (supports multiple terms separated by spaces)
+      const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+      const matchesSearch = searchTerms.length === 0 || searchTerms.some(term =>
+        facility.name.toLowerCase().includes(term) ||
+        facility.description.toLowerCase().includes(term)
+      );
+      
+      // Check selected companies
+      const matchesCompany = selectedCompanies.length === 0 || 
+        selectedCompanies.includes(facility.name);
+      
+      return matchesSearch || matchesCompany;
     });
-  }, [facilities, searchQuery, selectedCompany]);
+  }, [facilities, searchQuery, selectedCompanies, hasCompanyFilter]);
 
   // Generate heatmap data
   const heatmapData = useMemo(() => {
@@ -192,7 +199,7 @@ export const EmissionMap = ({
           5, 50,
           9, 80,
         ],
-        'heatmap-opacity': showHeatmap && isCompanyFiltered ? 0.8 : 0,
+        'heatmap-opacity': showHeatmap && hasCompanyFilter ? 0.8 : 0,
       },
     });
   };
@@ -230,10 +237,10 @@ export const EmissionMap = ({
       map.current.setPaintProperty(
         'heatmap-layer',
         'heatmap-opacity',
-        showHeatmap && isCompanyFiltered ? 0.8 : 0
+        showHeatmap && hasCompanyFilter ? 0.8 : 0
       );
     }
-  }, [showHeatmap, isCompanyFiltered, mapLoaded]);
+  }, [showHeatmap, hasCompanyFilter, mapLoaded]);
 
   // Add/update markers - only when company is filtered
   useEffect(() => {
@@ -243,8 +250,8 @@ export const EmissionMap = ({
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    // Only add markers when a specific company is selected
-    if (!isCompanyFiltered) return;
+    // Only add markers when companies are filtered
+    if (!hasCompanyFilter) return;
 
     // Add markers for each facility
     filteredFacilities.forEach((facility) => {
@@ -253,18 +260,17 @@ export const EmissionMap = ({
                            facility.totalEmissions > 8000 ? 'high' :
                            facility.totalEmissions > 4000 ? 'medium' : 'low';
 
-      // Create marker element with modern styling
+      // Create marker element with simple styling
       const el = document.createElement('div');
       el.className = 'facility-marker';
       
-      const baseSize = isCompanyFiltered ? 16 : 12;
-      const size = isSelected ? baseSize + 8 : baseSize;
+      const size = isSelected ? 14 : 10;
       
       const colors = {
-        critical: { bg: '#ef4444', glow: 'rgba(239, 68, 68, 0.6)' },
-        high: { bg: '#f97316', glow: 'rgba(249, 115, 22, 0.6)' },
-        medium: { bg: '#eab308', glow: 'rgba(234, 179, 8, 0.6)' },
-        low: { bg: '#22c55e', glow: 'rgba(34, 197, 94, 0.6)' },
+        critical: '#ef4444',
+        high: '#f97316',
+        medium: '#eab308',
+        low: '#22c55e',
       };
       
       const color = colors[emissionLevel];
@@ -273,27 +279,12 @@ export const EmissionMap = ({
         <div style="
           width: ${size}px;
           height: ${size}px;
-          background: ${color.bg};
-          border: 2px solid ${isSelected ? '#00ff88' : 'rgba(255,255,255,0.8)'};
+          background: ${color};
+          border: 2px solid ${isSelected ? '#fff' : 'rgba(255,255,255,0.6)'};
           border-radius: 50%;
           cursor: pointer;
-          box-shadow: 0 0 ${isSelected ? '25px' : '15px'} ${color.glow}, 0 2px 8px rgba(0,0,0,0.4);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          position: relative;
-        ">
-          ${isSelected ? `
-            <div style="
-              position: absolute;
-              top: -6px;
-              left: -6px;
-              right: -6px;
-              bottom: -6px;
-              border: 2px solid ${color.bg};
-              border-radius: 50%;
-              animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-            "></div>
-          ` : ''}
-        </div>
+          transition: all 0.2s ease;
+        "></div>
       `;
 
       const innerEl = el.firstElementChild as HTMLElement;
@@ -301,14 +292,12 @@ export const EmissionMap = ({
       el.addEventListener('mouseenter', () => {
         if (innerEl) {
           innerEl.style.transform = 'scale(1.3)';
-          innerEl.style.boxShadow = `0 0 30px ${color.glow}, 0 4px 12px rgba(0,0,0,0.5)`;
         }
       });
 
       el.addEventListener('mouseleave', () => {
         if (innerEl) {
           innerEl.style.transform = 'scale(1)';
-          innerEl.style.boxShadow = `0 0 ${isSelected ? '25px' : '15px'} ${color.glow}, 0 2px 8px rgba(0,0,0,0.4)`;
         }
       });
 
@@ -351,7 +340,7 @@ export const EmissionMap = ({
 
       markersRef.current.push(marker);
     });
-  }, [filteredFacilities, selectedFacility, mapLoaded, onFacilitySelect, isCompanyFiltered]);
+  }, [filteredFacilities, selectedFacility, mapLoaded, onFacilitySelect, hasCompanyFilter]);
 
   // Fly to selected facility or fit bounds for filtered facilities
   useEffect(() => {
@@ -367,13 +356,13 @@ export const EmissionMap = ({
           essential: true,
         });
       }
-    } else if (isCompanyFiltered && filteredFacilities.length > 0) {
+    } else if (hasCompanyFilter && filteredFacilities.length > 0) {
       // Fit bounds to show all filtered facilities
       const bounds = new mapboxgl.LngLatBounds();
       filteredFacilities.forEach((f) => bounds.extend([f.lng, f.lat]));
       map.current.fitBounds(bounds, { padding: 80, duration: 1000 });
     }
-  }, [selectedFacility, facilities, isCompanyFiltered, filteredFacilities, mapLoaded]);
+  }, [selectedFacility, facilities, hasCompanyFilter, filteredFacilities, mapLoaded]);
 
   const handleZoomIn = () => map.current?.zoomIn();
   const handleZoomOut = () => map.current?.zoomOut();
@@ -428,15 +417,15 @@ export const EmissionMap = ({
       <div ref={mapContainer} className="absolute inset-0" />
 
       {/* Instruction overlay when no company is selected */}
-      {!isCompanyFiltered && mapLoaded && (
+      {!hasCompanyFilter && mapLoaded && (
         <div className="absolute inset-0 z-5 flex items-center justify-center pointer-events-none">
           <div className="bg-card/90 backdrop-blur-xl rounded-2xl border border-border/50 px-6 py-4 shadow-xl text-center max-w-xs">
             <MapPin className="w-8 h-8 text-primary mx-auto mb-3" />
             <h3 className="font-mono text-sm font-bold text-foreground mb-2">
-              SELECT A COMPANY
+              SELECT COMPANIES
             </h3>
             <p className="font-mono text-xs text-muted-foreground">
-              Use the company filter above to view facility locations and emission heatmaps
+              Use the company filter or search above to view facility locations and emission heatmaps
             </p>
           </div>
         </div>
@@ -451,11 +440,11 @@ export const EmissionMap = ({
               ESG EMISSIONS MAP
             </h2>
           </div>
-          {isCompanyFiltered && (
+          {hasCompanyFilter && (
             <div className="mt-2 flex items-center gap-2">
               <Flame className="w-4 h-4 text-terminal-orange" />
               <span className="font-mono text-xs text-muted-foreground">
-                Viewing: <span className="text-primary">{selectedCompany}</span>
+                Viewing: <span className="text-primary">{filteredFacilities.length} facilities</span>
               </span>
             </div>
           )}
@@ -541,7 +530,7 @@ export const EmissionMap = ({
         </div>
 
         {/* Heatmap Toggle - Only show when company is filtered */}
-        {isCompanyFiltered && (
+        {hasCompanyFilter && (
           <button
             onClick={() => setShowHeatmap(!showHeatmap)}
             className={`p-2.5 rounded-xl font-mono text-xs transition-all shadow-xl ${
@@ -561,9 +550,9 @@ export const EmissionMap = ({
         <div className="absolute bottom-3 left-3 right-16 sm:bottom-4 sm:left-4 sm:right-auto z-10">
           <div className="bg-card/80 backdrop-blur-xl rounded-xl border border-border/50 px-4 py-2.5 shadow-xl">
             <p className="font-mono text-xs text-muted-foreground">
-              {isCompanyFiltered 
-                ? `Showing ${filteredFacilities.length} facilities for ${selectedCompany}`
-                : 'Select a company to see emission heatmap'
+              {hasCompanyFilter 
+                ? `Showing ${filteredFacilities.length} facilities`
+                : 'Select companies or search to see emission heatmap'
               }
             </p>
           </div>
