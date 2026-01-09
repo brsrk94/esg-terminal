@@ -6,9 +6,10 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 interface EmissionDetailsProps {
   facility: (FacilityLocation & { totalEmissions: number; recordCount: number }) | null;
   onClose: () => void;
+  selectedScope: string;
 }
 
-export const EmissionDetails = ({ facility, onClose }: EmissionDetailsProps) => {
+export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDetailsProps) => {
   if (!facility) {
     return (
       <div className="h-full flex items-center justify-center bg-card border border-border p-6">
@@ -25,9 +26,33 @@ export const EmissionDetails = ({ facility, onClose }: EmissionDetailsProps) => 
     );
   }
 
-  const emissions = getFacilityEmissions(facility.id);
-  const scopeData = getEmissionsByScope(facility.id);
-  const ghgData = getEmissionsByGHGType(facility.id);
+  // Get facility emissions and filter by selected scope
+  const allEmissions = getFacilityEmissions(facility.id);
+  const emissions = selectedScope === 'all' 
+    ? allEmissions 
+    : allEmissions.filter(e => e.scope === selectedScope);
+
+  // Calculate scope data from filtered emissions
+  const scopeData = (() => {
+    const totals = { 'Scope 1': 0, 'Scope 2': 0, 'Scope 3': 0 };
+    const dataToUse = selectedScope === 'all' ? allEmissions : emissions;
+    dataToUse.forEach(record => {
+      totals[record.scope] += record.emissions;
+    });
+    return Object.entries(totals).map(([scope, value]) => ({ scope, value }));
+  })();
+
+  // Calculate GHG data from filtered emissions
+  const ghgData = (() => {
+    const totals: Record<string, number> = { 'CO₂': 0, 'CH₄': 0, 'N₂O': 0 };
+    emissions.forEach(record => {
+      totals[record.ghgType] += record.emissions;
+    });
+    return Object.entries(totals).map(([type, value]) => ({ type, value }));
+  })();
+
+  // Calculate total emissions from filtered data
+  const totalEmissionsFiltered = emissions.reduce((sum, e) => sum + e.emissions, 0);
 
   const scopeColors = ['hsl(var(--terminal-red))', 'hsl(var(--terminal-orange))', 'hsl(var(--terminal-blue))'];
   const ghgColors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
@@ -89,7 +114,7 @@ export const EmissionDetails = ({ facility, onClose }: EmissionDetailsProps) => 
               )}
             </div>
             <div className="font-mono text-xl font-bold text-foreground">
-              {facility.totalEmissions.toLocaleString()}
+              {totalEmissionsFiltered.toLocaleString()}
             </div>
             <div className={`font-mono text-xs ${trend === 'up' ? 'text-terminal-red' : 'text-terminal-green'}`}>
               {trend === 'up' ? '+' : '-'}{trendValue}% vs prev quarter
