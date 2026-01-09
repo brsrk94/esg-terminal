@@ -222,13 +222,16 @@ export const EmissionMap = ({
     }
   }, [showHeatmap, isCompanyFiltered, mapLoaded]);
 
-  // Add/update markers
+  // Add/update markers - only when company is filtered
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
     // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
+
+    // Only add markers when a specific company is selected
+    if (!isCompanyFiltered) return;
 
     // Add markers for each facility
     filteredFacilities.forEach((facility) => {
@@ -411,6 +414,21 @@ export const EmissionMap = ({
       {/* Mapbox Container */}
       <div ref={mapContainer} className="absolute inset-0" />
 
+      {/* Instruction overlay when no company is selected */}
+      {!isCompanyFiltered && mapLoaded && (
+        <div className="absolute inset-0 z-5 flex items-center justify-center pointer-events-none">
+          <div className="bg-card/90 backdrop-blur-xl rounded-2xl border border-border/50 px-6 py-4 shadow-xl text-center max-w-xs">
+            <MapPin className="w-8 h-8 text-primary mx-auto mb-3" />
+            <h3 className="font-mono text-sm font-bold text-foreground mb-2">
+              SELECT A COMPANY
+            </h3>
+            <p className="font-mono text-xs text-muted-foreground">
+              Use the company filter above to view facility locations and emission heatmaps
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Map Header - Modern glassmorphism */}
       <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-auto z-10">
         <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 px-4 py-3 shadow-xl">
@@ -424,7 +442,7 @@ export const EmissionMap = ({
             <div className="mt-2 flex items-center gap-2">
               <Flame className="w-4 h-4 text-terminal-orange" />
               <span className="font-mono text-xs text-muted-foreground">
-                Heatmap: <span className="text-primary">{selectedCompany}</span>
+                Viewing: <span className="text-primary">{selectedCompany}</span>
               </span>
             </div>
           )}

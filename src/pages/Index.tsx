@@ -77,13 +77,14 @@ const Index = () => {
             <EmissionDetails
               facility={selectedFacilityData}
               onClose={() => setSelectedFacility(null)}
+              selectedScope={selectedScope}
             />
           </div>
         </div>
 
         {/* Stats Sidebar (Desktop) */}
         <div className="hidden xl:block w-[300px]">
-          <StatsSidebar />
+          <StatsSidebar selectedScope={selectedScope} selectedCompany={selectedCompany} />
         </div>
       </div>
 
@@ -94,6 +95,7 @@ const Index = () => {
             <EmissionDetails
               facility={selectedFacilityData}
               onClose={() => setSelectedFacility(null)}
+              selectedScope={selectedScope}
             />
           </div>
         </div>
@@ -117,7 +119,7 @@ const Index = () => {
       {showSidebar && (
         <div className="xl:hidden fixed inset-0 z-30 bg-background/95 backdrop-blur-sm">
           <div className="h-full overflow-auto pt-16">
-            <StatsSidebar />
+            <StatsSidebar selectedScope={selectedScope} selectedCompany={selectedCompany} />
           </div>
           <Button
             variant="ghost"

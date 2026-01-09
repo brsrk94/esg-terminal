@@ -1,14 +1,57 @@
 import { Building2, Flame, Wind, Droplets, TrendingUp } from 'lucide-react';
-import { getTotalEmissionsByCompany, getEmissionsByScope, getEmissionsByGHGType } from '@/data/emissionData';
+import { getTotalEmissionsByCompany, getEmissionsByScope, getEmissionsByGHGType, emissionData } from '@/data/emissionData';
 import { BarChart, Bar, ResponsiveContainer, Cell } from 'recharts';
+import { useMemo } from 'react';
 
-export const StatsSidebar = () => {
-  const companyData = getTotalEmissionsByCompany().sort((a, b) => b.total - a.total);
-  const scopeData = getEmissionsByScope();
-  const ghgData = getEmissionsByGHGType();
-  const totalEmissions = companyData.reduce((sum, c) => sum + c.total, 0);
+interface StatsSidebarProps {
+  selectedScope: string;
+  selectedCompany: string;
+}
 
-  const maxEmission = Math.max(...companyData.map(c => c.total));
+export const StatsSidebar = ({ selectedScope, selectedCompany }: StatsSidebarProps) => {
+  // Filter emission data based on selected scope and company
+  const filteredData = useMemo(() => {
+    return emissionData.filter(record => {
+      const matchesScope = selectedScope === 'all' || record.scope === selectedScope;
+      const matchesCompany = selectedCompany === 'all' || record.facilityName === selectedCompany;
+      return matchesScope && matchesCompany;
+    });
+  }, [selectedScope, selectedCompany]);
+
+  // Calculate company totals from filtered data
+  const companyData = useMemo(() => {
+    const totals: Record<string, number> = {};
+    filteredData.forEach(record => {
+      if (!totals[record.facilityName]) {
+        totals[record.facilityName] = 0;
+      }
+      totals[record.facilityName] += record.emissions;
+    });
+    return Object.entries(totals)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [filteredData]);
+
+  // Calculate scope data from filtered data
+  const scopeData = useMemo(() => {
+    const totals = { 'Scope 1': 0, 'Scope 2': 0, 'Scope 3': 0 };
+    filteredData.forEach(record => {
+      totals[record.scope] += record.emissions;
+    });
+    return Object.entries(totals).map(([scope, value]) => ({ scope, value }));
+  }, [filteredData]);
+
+  // Calculate GHG data from filtered data
+  const ghgData = useMemo(() => {
+    const totals: Record<string, number> = { 'CO₂': 0, 'CH₄': 0, 'N₂O': 0 };
+    filteredData.forEach(record => {
+      totals[record.ghgType] += record.emissions;
+    });
+    return Object.entries(totals).map(([type, value]) => ({ type, value }));
+  }, [filteredData]);
+
+  const totalEmissions = filteredData.reduce((sum, c) => sum + c.emissions, 0);
+  const maxEmission = companyData.length > 0 ? Math.max(...companyData.map(c => c.total)) : 0;
 
   const getGHGIcon = (type: string) => {
     switch (type) {
