@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { MapPin, Plus, Minus, Layers, Flame } from 'lucide-react';
+import { MapPin, Plus, Minus, Layers } from 'lucide-react';
 import { FacilityLocation } from '@/data/emissionData';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -30,7 +30,6 @@ export const EmissionMap = ({
   const [tokenInput, setTokenInput] = useState('');
   const [mapStyle, setMapStyle] = useState<'satellite' | 'dark' | 'terrain'>('dark');
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [showHeatmap, setShowHeatmap] = useState(true);
 
   // Check if any company is selected (via dropdown or search)
   const hasCompanyFilter = selectedCompanies.length > 0 || searchQuery.trim().length > 0;
@@ -134,19 +133,19 @@ export const EmissionMap = ({
     
     map.current.setStyle(getStyleUrl(mapStyle));
     
-    // Re-add heatmap after style change
+    // Re-add circle layer after style change
     map.current.once('style.load', () => {
-      addHeatmapLayer();
+      addCircleLayer();
     });
   }, [mapStyle]);
 
-  // Add heatmap layer function
-  const addHeatmapLayer = () => {
+  // Add circle layer function
+  const addCircleLayer = () => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
     // Remove existing source and layer if they exist
-    if (map.current.getLayer('heatmap-layer')) {
-      map.current.removeLayer('heatmap-layer');
+    if (map.current.getLayer('emissions-circle')) {
+      map.current.removeLayer('emissions-circle');
     }
     if (map.current.getSource('emissions')) {
       map.current.removeSource('emissions');
@@ -158,48 +157,33 @@ export const EmissionMap = ({
       data: heatmapData,
     });
 
-    // Add heatmap layer
+    // Add simple circle layer instead of heatmap
     map.current.addLayer({
-      id: 'heatmap-layer',
-      type: 'heatmap',
+      id: 'emissions-circle',
+      type: 'circle',
       source: 'emissions',
       paint: {
-        'heatmap-weight': [
+        'circle-radius': [
           'interpolate',
           ['linear'],
           ['get', 'emissions'],
-          0, 0,
-          5000, 0.3,
-          10000, 0.6,
-          20000, 1,
+          0, 6,
+          5000, 8,
+          10000, 10,
+          20000, 12,
         ],
-        'heatmap-intensity': [
+        'circle-color': [
           'interpolate',
           ['linear'],
-          ['zoom'],
-          0, 1,
-          9, 3,
+          ['get', 'emissions'],
+          0, '#22c55e',
+          5000, '#eab308',
+          10000, '#f97316',
+          20000, '#ef4444',
         ],
-        'heatmap-color': [
-          'interpolate',
-          ['linear'],
-          ['heatmap-density'],
-          0, 'rgba(0, 0, 0, 0)',
-          0.1, 'rgba(34, 197, 94, 0.4)',
-          0.3, 'rgba(234, 179, 8, 0.6)',
-          0.5, 'rgba(249, 115, 22, 0.8)',
-          0.7, 'rgba(239, 68, 68, 0.9)',
-          1, 'rgba(239, 68, 68, 1)',
-        ],
-        'heatmap-radius': [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          0, 30,
-          5, 50,
-          9, 80,
-        ],
-        'heatmap-opacity': showHeatmap && hasCompanyFilter ? 0.8 : 0,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': 'rgba(255, 255, 255, 0.8)',
+        'circle-opacity': hasCompanyFilter ? 1 : 0,
       },
     });
   };
@@ -215,7 +199,7 @@ export const EmissionMap = ({
         if (source) {
           source.setData(heatmapData);
         } else {
-          addHeatmapLayer();
+          addCircleLayer();
         }
       });
       return;
@@ -225,22 +209,22 @@ export const EmissionMap = ({
     if (source) {
       source.setData(heatmapData);
     } else {
-      addHeatmapLayer();
+      addCircleLayer();
     }
   }, [heatmapData, mapLoaded]);
 
-  // Update heatmap visibility
+  // Update circle layer visibility
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    if (map.current.getLayer('heatmap-layer')) {
+    if (map.current.getLayer('emissions-circle')) {
       map.current.setPaintProperty(
-        'heatmap-layer',
-        'heatmap-opacity',
-        showHeatmap && hasCompanyFilter ? 0.8 : 0
+        'emissions-circle',
+        'circle-opacity',
+        hasCompanyFilter ? 1 : 0
       );
     }
-  }, [showHeatmap, hasCompanyFilter, mapLoaded]);
+  }, [hasCompanyFilter, mapLoaded]);
 
   // Add/update markers - only when company is filtered
   useEffect(() => {
@@ -442,7 +426,7 @@ export const EmissionMap = ({
           </div>
           {hasCompanyFilter && (
             <div className="mt-2 flex items-center gap-2">
-              <Flame className="w-4 h-4 text-terminal-orange" />
+              <MapPin className="w-4 h-4 text-primary" />
               <span className="font-mono text-xs text-muted-foreground">
                 Viewing: <span className="text-primary">{filteredFacilities.length} facilities</span>
               </span>
@@ -529,20 +513,6 @@ export const EmissionMap = ({
           </button>
         </div>
 
-        {/* Heatmap Toggle - Only show when company is filtered */}
-        {hasCompanyFilter && (
-          <button
-            onClick={() => setShowHeatmap(!showHeatmap)}
-            className={`p-2.5 rounded-xl font-mono text-xs transition-all shadow-xl ${
-              showHeatmap 
-                ? 'bg-terminal-orange text-black border border-terminal-orange' 
-                : 'bg-card/80 backdrop-blur-xl border border-border/50 hover:bg-muted'
-            }`}
-            title="Toggle Heatmap"
-          >
-            <Flame className="w-4 h-4" />
-          </button>
-        )}
       </div>
 
       {/* Instructions */}
