@@ -60,6 +60,18 @@ export const SearchBar = ({
     onCompaniesChange(newSelection);
   };
 
+  // Add company from search (when pressing Enter)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && filteredCompanies.length > 0) {
+      e.preventDefault();
+      // Select all filtered companies
+      const newSelection = [...new Set([...selectedCompanies, ...filteredCompanies])];
+      onCompaniesChange(newSelection);
+      onSearchChange('');
+      setIsDropdownOpen(false);
+    }
+  };
+
   return (
     <div className="p-4 border-b border-border bg-card/80 backdrop-blur-sm">
       {/* Main Search Container */}
@@ -68,23 +80,22 @@ export const SearchBar = ({
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search Input with Dropdown */}
           <div className="relative flex-1">
-            <div 
-              className="relative"
-              onClick={() => setIsDropdownOpen(true)}
-            >
+            <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <Input
-                placeholder="Type to search companies..."
+                placeholder="Search: adani, tata, jsw... (press Enter to select all matches)"
                 value={searchQuery}
                 onChange={(e) => {
                   onSearchChange(e.target.value);
                   setIsDropdownOpen(true);
                 }}
                 onFocus={() => setIsDropdownOpen(true)}
+                onKeyDown={handleKeyDown}
                 className="pl-11 pr-10 h-11 font-mono text-sm bg-muted/50 border-border/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
               />
               <ChevronDown 
-                className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-transform cursor-pointer ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               />
             </div>
 
@@ -96,13 +107,25 @@ export const SearchBar = ({
                   onClick={() => setIsDropdownOpen(false)} 
                 />
                 <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-card border border-border/50 rounded-xl shadow-xl overflow-hidden">
+                  {/* Search Hint */}
+                  {searchQuery && (
+                    <div className="px-3 py-2 bg-primary/5 border-b border-border/50">
+                      <p className="font-mono text-xs text-muted-foreground">
+                        💡 Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-primary">Enter</kbd> to select all {filteredCompanies.length} matching companies
+                      </p>
+                    </div>
+                  )}
+                  
                   {/* Quick Actions */}
                   <div className="p-2 border-b border-border/50 flex gap-2 bg-muted/30">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="flex-1 font-mono text-xs h-8 hover:bg-primary/10 hover:text-primary"
-                      onClick={selectAllFiltered}
+                      onClick={() => {
+                        selectAllFiltered();
+                        onSearchChange('');
+                      }}
                     >
                       Select All {filteredCompanies.length > 0 && `(${filteredCompanies.length})`}
                     </Button>
@@ -141,12 +164,15 @@ export const SearchBar = ({
                               </div>
                               <Building2 className="w-4 h-4 text-muted-foreground" />
                               <span className="font-mono text-sm flex-1">{company}</span>
+                              {isSelected && (
+                                <span className="font-mono text-xs text-primary">Selected</span>
+                              )}
                             </button>
                           );
                         })
                       ) : (
                         <div className="px-3 py-6 text-center text-muted-foreground font-mono text-sm">
-                          No companies found
+                          No companies match "{searchQuery}"
                         </div>
                       )}
                     </div>
@@ -173,7 +199,9 @@ export const SearchBar = ({
         {/* Selected Companies Pills */}
         {(selectedCompanies.length > 0 || selectedScope !== 'all') && (
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">Active:</span>
+            <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
+              Filters ({selectedCompanies.length + (selectedScope !== 'all' ? 1 : 0)}):
+            </span>
             
             {selectedCompanies.map(company => (
               <Badge 
@@ -207,14 +235,12 @@ export const SearchBar = ({
               </Badge>
             )}
 
-            {(selectedCompanies.length > 0 || selectedScope !== 'all') && (
-              <button 
-                onClick={clearAll}
-                className="font-mono text-xs text-muted-foreground hover:text-destructive transition-colors ml-2"
-              >
-                Clear all
-              </button>
-            )}
+            <button 
+              onClick={clearAll}
+              className="font-mono text-xs text-muted-foreground hover:text-destructive transition-colors ml-2"
+            >
+              Clear all
+            </button>
           </div>
         )}
       </div>
