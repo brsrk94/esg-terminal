@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { X, TrendingUp, TrendingDown, AlertTriangle, Factory, Calendar, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FacilityLocation, getFacilityEmissions, getEmissionsByScope, getEmissionsByGHGType } from '@/data/emissionData';
@@ -32,24 +33,27 @@ export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDe
     ? allEmissions 
     : allEmissions.filter(e => e.scope === selectedScope);
 
-  // Calculate scope data from filtered emissions
-  const scopeData = (() => {
+  // Calculate scope data - always show all scopes with their actual values
+  const scopeData = useMemo(() => {
     const totals = { 'Scope 1': 0, 'Scope 2': 0, 'Scope 3': 0 };
-    const dataToUse = selectedScope === 'all' ? allEmissions : emissions;
-    dataToUse.forEach(record => {
+    allEmissions.forEach(record => {
       totals[record.scope] += record.emissions;
     });
+    // Filter to only show selected scope if one is selected
+    if (selectedScope !== 'all') {
+      return [{ scope: selectedScope, value: totals[selectedScope as keyof typeof totals] || 0 }];
+    }
     return Object.entries(totals).map(([scope, value]) => ({ scope, value }));
-  })();
+  }, [allEmissions, selectedScope]);
 
   // Calculate GHG data from filtered emissions
-  const ghgData = (() => {
+  const ghgData = useMemo(() => {
     const totals: Record<string, number> = { 'CO₂': 0, 'CH₄': 0, 'N₂O': 0 };
     emissions.forEach(record => {
       totals[record.ghgType] += record.emissions;
     });
     return Object.entries(totals).map(([type, value]) => ({ type, value }));
-  })();
+  }, [emissions]);
 
   // Calculate total emissions from filtered data
   const totalEmissionsFiltered = emissions.reduce((sum, e) => sum + e.emissions, 0);
@@ -194,7 +198,7 @@ export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDe
           <div className="space-y-2">
             {ghgData.map((item, index) => {
               const total = ghgData.reduce((sum, d) => sum + d.value, 0);
-              const percentage = ((item.value / total) * 100).toFixed(1);
+              const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0.0';
               return (
                 <div key={item.type} className="space-y-1">
                   <div className="flex justify-between font-mono text-xs">

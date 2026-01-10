@@ -161,24 +161,28 @@ export const StatsSidebar = ({ selectedScope, selectedCompanies }: StatsSidebarP
             </ResponsiveContainer>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            {scopeData.map((scope, index) => (
-              <div key={scope.scope} className="text-center">
-                <div
-                  className={`font-mono text-lg font-bold ${
-                    index === 0
-                      ? 'text-terminal-red'
-                      : index === 1
-                      ? 'text-terminal-orange'
-                      : 'text-terminal-blue'
-                  }`}
-                >
-                  {((scope.value / totalEmissions) * 100).toFixed(0)}%
+            {scopeData.map((scope, index) => {
+              const scopeTotal = scopeData.reduce((sum, s) => sum + s.value, 0);
+              const percentage = scopeTotal > 0 ? ((scope.value / scopeTotal) * 100) : 0;
+              return (
+                <div key={scope.scope} className="text-center">
+                  <div
+                    className={`font-mono text-lg font-bold ${
+                      index === 0
+                        ? 'text-terminal-red'
+                        : index === 1
+                        ? 'text-terminal-orange'
+                        : 'text-terminal-blue'
+                    }`}
+                  >
+                    {percentage.toFixed(0)}%
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground">
+                    {scope.scope}
+                  </div>
                 </div>
-                <div className="font-mono text-xs text-muted-foreground">
-                  {scope.scope}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
