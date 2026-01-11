@@ -326,7 +326,7 @@ export const EmissionMap = ({
     });
   }, [filteredFacilities, selectedFacility, mapLoaded, onFacilitySelect, hasCompanyFilter]);
 
-  // Fly to selected facility or fit bounds for filtered facilities
+  // Fly to selected facility only - removed auto zoom for filtered facilities
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
@@ -340,13 +340,8 @@ export const EmissionMap = ({
           essential: true,
         });
       }
-    } else if (hasCompanyFilter && filteredFacilities.length > 0) {
-      // Fit bounds to show all filtered facilities
-      const bounds = new mapboxgl.LngLatBounds();
-      filteredFacilities.forEach((f) => bounds.extend([f.lng, f.lat]));
-      map.current.fitBounds(bounds, { padding: 80, duration: 1000 });
     }
-  }, [selectedFacility, facilities, hasCompanyFilter, filteredFacilities, mapLoaded]);
+  }, [selectedFacility, facilities, mapLoaded]);
 
   const handleZoomIn = () => map.current?.zoomIn();
   const handleZoomOut = () => map.current?.zoomOut();

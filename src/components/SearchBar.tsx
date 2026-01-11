@@ -33,9 +33,9 @@ export const SearchBar = ({
 }: SearchBarProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Filter companies based on search query
+  // Filter companies based on search query - only show matches when searching
   const filteredCompanies = useMemo(() => {
-    if (!searchQuery.trim()) return companies;
+    if (!searchQuery.trim()) return []; // Don't show any companies until user types
     const terms = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
     return companies.filter(company => 
       terms.some(term => company.toLowerCase().includes(term))
@@ -139,7 +139,7 @@ export const SearchBar = ({
                     </Button>
                   </div>
                   
-                  {/* Companies List */}
+                  {/* Companies List - Only show filtered companies */}
                   <ScrollArea className="max-h-[240px]">
                     <div className="p-2 space-y-0.5">
                       {filteredCompanies.length > 0 ? (
@@ -170,9 +170,13 @@ export const SearchBar = ({
                             </button>
                           );
                         })
-                      ) : (
+                      ) : searchQuery.trim() ? (
                         <div className="px-3 py-6 text-center text-muted-foreground font-mono text-sm">
                           No companies match "{searchQuery}"
+                        </div>
+                      ) : (
+                        <div className="px-3 py-6 text-center text-muted-foreground font-mono text-sm">
+                          Type to search companies
                         </div>
                       )}
                     </div>
