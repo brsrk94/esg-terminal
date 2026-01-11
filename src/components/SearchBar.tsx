@@ -73,7 +73,7 @@ export const SearchBar = ({
   };
 
   return (
-    <div className="p-4 border-b border-border bg-card/80 backdrop-blur-sm">
+    <div className="p-4 border-b border-border bg-card/80 backdrop-blur-sm relative z-[200]">
       {/* Main Search Container */}
       <div className="flex flex-col gap-3">
         {/* Search Row */}
