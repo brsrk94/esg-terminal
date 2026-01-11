@@ -273,22 +273,30 @@ export const EmissionMap = ({
 
       const innerEl = el.firstElementChild as HTMLElement;
       
-      // Show company name on hover
       el.addEventListener('mouseenter', () => {
         if (innerEl) {
           innerEl.style.transform = 'scale(1.3)';
         }
+      });
+
+      el.addEventListener('mouseleave', () => {
+        if (innerEl) {
+          innerEl.style.transform = 'scale(1)';
+        }
+      });
+
+      el.addEventListener('click', () => {
+        onFacilitySelect(facility.id);
         
         if (popupRef.current) {
           popupRef.current.remove();
         }
         
         popupRef.current = new mapboxgl.Popup({
-          closeButton: false,
+          closeButton: true,
           closeOnClick: false,
           className: 'terminal-popup',
-          maxWidth: '280px',
-          offset: 15,
+          maxWidth: '320px',
         })
           .setLngLat([facility.lng, facility.lat])
           .setHTML(`
@@ -300,20 +308,14 @@ export const EmissionMap = ({
                   <div class="popup-value" style="color: #00ff88;">${facility.totalEmissions.toLocaleString()}</div>
                   <div class="popup-label">TONS CO₂e</div>
                 </div>
+                <div class="popup-stat">
+                  <div class="popup-value" style="color: #3b82f6;">${facility.recordCount}</div>
+                  <div class="popup-label">RECORDS</div>
+                </div>
               </div>
             </div>
           `)
           .addTo(map.current!);
-      });
-
-      el.addEventListener('mouseleave', () => {
-        if (innerEl) {
-          innerEl.style.transform = 'scale(1)';
-        }
-        if (popupRef.current) {
-          popupRef.current.remove();
-          popupRef.current = null;
-        }
       });
 
       const marker = new mapboxgl.Marker({ element: el })
@@ -324,6 +326,22 @@ export const EmissionMap = ({
     });
   }, [filteredFacilities, selectedFacility, mapLoaded, onFacilitySelect, hasCompanyFilter]);
 
+  // Fly to selected facility only - removed auto zoom for filtered facilities
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    if (selectedFacility) {
+      const facility = facilities.find((f) => f.id === selectedFacility);
+      if (facility) {
+        map.current.flyTo({
+          center: [facility.lng, facility.lat],
+          zoom: 8,
+          duration: 1200,
+          essential: true,
+        });
+      }
+    }
+  }, [selectedFacility, facilities, mapLoaded]);
 
   const handleZoomIn = () => map.current?.zoomIn();
   const handleZoomOut = () => map.current?.zoomOut();
