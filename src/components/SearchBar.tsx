@@ -103,10 +103,10 @@ export const SearchBar = ({
             {isDropdownOpen && (
               <>
                 <div 
-                  className="fixed inset-0 z-40" 
+                  className="fixed inset-0 z-[100]" 
                   onClick={() => setIsDropdownOpen(false)} 
                 />
-                <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-card border border-border/50 rounded-xl shadow-xl overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-2 z-[110] bg-popover border border-border rounded-xl shadow-2xl overflow-hidden">
                   {/* Search Hint */}
                   {searchQuery && (
                     <div className="px-3 py-2 bg-primary/5 border-b border-border/50">
