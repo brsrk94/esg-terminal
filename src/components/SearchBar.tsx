@@ -48,6 +48,7 @@ export const SearchBar = ({
     } else {
       onCompaniesChange([...selectedCompanies, company]);
     }
+    setIsDropdownOpen(false);
   };
 
   const clearAll = () => {
