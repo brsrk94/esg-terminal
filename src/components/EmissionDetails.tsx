@@ -162,9 +162,11 @@ export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDe
                   outerRadius={70}
                   strokeWidth={2}
                   stroke="hsl(var(--background))"
+                  label={({ scope, percent }) => `${scope}: ${(percent * 100).toFixed(1)}%`}
+                  labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
                 >
                   {scopeData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={scopeColors[index]} />
+                    <Cell key={`cell-${index}`} fill={scopeColors[index % scopeColors.length]} />
                   ))}
                 </Pie>
                 <Tooltip
@@ -174,6 +176,13 @@ export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDe
                     borderRadius: '0',
                     fontFamily: 'monospace',
                     fontSize: '12px',
+                    color: 'hsl(var(--popover-foreground))',
+                  }}
+                  itemStyle={{
+                    color: 'hsl(var(--popover-foreground))',
+                  }}
+                  labelStyle={{
+                    color: 'hsl(var(--popover-foreground))',
                   }}
                   formatter={(value: number) => [`${value.toLocaleString()} tons`, '']}
                 />
@@ -249,6 +258,13 @@ export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDe
                     borderRadius: '0',
                     fontFamily: 'monospace',
                     fontSize: '12px',
+                    color: 'hsl(var(--popover-foreground))',
+                  }}
+                  itemStyle={{
+                    color: 'hsl(var(--popover-foreground))',
+                  }}
+                  labelStyle={{
+                    color: 'hsl(var(--popover-foreground))',
                   }}
                   formatter={(value: number) => [`${value.toLocaleString()} tons`, 'Emissions']}
                 />
