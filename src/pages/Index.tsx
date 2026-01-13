@@ -90,7 +90,7 @@ const Index = () => {
 
       {/* Mobile/Tablet Emission Details */}
       {selectedFacilityData && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
+        <div className="lg:hidden fixed inset-0 z-50 bg-background/95 backdrop-blur-md animate-fade-in">
           <div className="h-full overflow-auto">
             <EmissionDetails
               facility={selectedFacilityData}
@@ -117,14 +117,14 @@ const Index = () => {
 
       {/* Mobile Stats Sidebar */}
       {showSidebar && (
-        <div className="xl:hidden fixed inset-0 z-30 bg-background/95 backdrop-blur-sm">
-          <div className="h-full overflow-auto pt-16">
+        <div className="xl:hidden fixed inset-0 z-30 bg-background/95 backdrop-blur-md animate-fade-in">
+          <div className="h-full overflow-auto pt-16 animate-slide-up">
             <StatsSidebar selectedScope={selectedScope} selectedCompanies={selectedCompanies} />
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4"
+            className="absolute top-4 right-4 hover:bg-destructive/20 transition-colors duration-200"
             onClick={() => setShowSidebar(false)}
           >
             <X className="w-5 h-5" />

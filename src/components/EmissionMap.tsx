@@ -102,11 +102,31 @@ export const EmissionMap = ({
         style: getStyleUrl(mapStyle),
         center: [78.9629, 22.5937],
         zoom: 4,
-        pitch: 0,
+        pitch: 45,
+        bearing: 0,
+        antialias: true,
+        fadeDuration: 300,
       });
+
+      // Add smooth navigation controls
+      map.current.addControl(
+        new mapboxgl.NavigationControl({
+          visualizePitch: true,
+        }),
+        'bottom-right'
+      );
 
       map.current.on('load', () => {
         setMapLoaded(true);
+        
+        // Add fog/atmosphere for depth
+        map.current?.setFog({
+          color: 'rgb(15, 20, 30)',
+          'high-color': 'rgb(30, 40, 60)',
+          'horizon-blend': 0.1,
+          'space-color': 'rgb(10, 15, 25)',
+          'star-intensity': 0.15,
+        });
       });
 
       map.current.on('error', (e) => {
@@ -326,7 +346,7 @@ export const EmissionMap = ({
     });
   }, [filteredFacilities, selectedFacility, mapLoaded, onFacilitySelect, hasCompanyFilter]);
 
-  // Fly to selected facility only - removed auto zoom for filtered facilities
+  // Fly to selected facility with smooth animation
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
@@ -335,16 +355,19 @@ export const EmissionMap = ({
       if (facility) {
         map.current.flyTo({
           center: [facility.lng, facility.lat],
-          zoom: 8,
-          duration: 1200,
+          zoom: 10,
+          pitch: 50,
+          bearing: Math.random() * 30 - 15, // Slight random bearing for visual interest
+          duration: 2000,
           essential: true,
+          curve: 1.5,
         });
       }
     }
   }, [selectedFacility, facilities, mapLoaded]);
 
-  const handleZoomIn = () => map.current?.zoomIn();
-  const handleZoomOut = () => map.current?.zoomOut();
+  const handleZoomIn = () => map.current?.zoomIn({ duration: 300 });
+  const handleZoomOut = () => map.current?.zoomOut({ duration: 300 });
 
   // Token input screen
   if (!mapboxToken) {
@@ -397,13 +420,13 @@ export const EmissionMap = ({
 
       {/* Instruction overlay when no company is selected */}
       {!hasCompanyFilter && mapLoaded && (
-        <div className="absolute inset-0 z-5 flex items-center justify-center pointer-events-none">
-          <div className="bg-card/90 backdrop-blur-xl rounded-2xl border border-border/50 px-6 py-4 shadow-xl text-center max-w-xs">
-            <MapPin className="w-8 h-8 text-primary mx-auto mb-3" />
+        <div className="absolute inset-0 z-5 flex items-center justify-center pointer-events-none animate-fade-in">
+          <div className="bg-card/90 backdrop-blur-xl rounded-2xl border border-border/50 px-6 py-5 shadow-2xl text-center max-w-xs hover-lift transition-all duration-300">
+            <MapPin className="w-10 h-10 text-primary mx-auto mb-4 animate-pulse" />
             <h3 className="font-mono text-sm font-bold text-foreground mb-2">
               SELECT COMPANIES
             </h3>
-            <p className="font-mono text-xs text-muted-foreground">
+            <p className="font-mono text-xs text-muted-foreground leading-relaxed">
               Use the company filter or search above to view facility locations and emission heatmaps
             </p>
           </div>
@@ -411,19 +434,19 @@ export const EmissionMap = ({
       )}
 
       {/* Map Header - Modern glassmorphism */}
-      <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-auto z-10">
-        <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 px-4 py-3 shadow-xl">
+      <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-auto z-10 animate-fade-in">
+        <div className="glass rounded-2xl border border-border/30 px-4 py-3 shadow-2xl transition-all duration-300 hover:border-primary/30">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            <h2 className="font-mono text-sm font-bold text-foreground">
+            <div className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse shadow-lg shadow-primary/50" />
+            <h2 className="font-mono text-sm font-bold text-foreground tracking-wide">
               ESG EMISSIONS MAP
             </h2>
           </div>
           {hasCompanyFilter && (
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-2 animate-fade-in">
               <MapPin className="w-4 h-4 text-primary" />
               <span className="font-mono text-xs text-muted-foreground">
-                Viewing: <span className="text-primary">{filteredFacilities.length} facilities</span>
+                Viewing: <span className="text-primary font-semibold">{filteredFacilities.length} facilities</span>
               </span>
             </div>
           )}
@@ -431,25 +454,25 @@ export const EmissionMap = ({
       </div>
 
       {/* Legend - Responsive */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
-        <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-3 shadow-xl">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <div className="glass rounded-2xl border border-border/30 p-3 shadow-2xl transition-all duration-300 hover:border-primary/30">
           <div className="flex flex-col gap-2">
             <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">Emission Level</span>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-              <span className="flex items-center gap-2 font-mono text-xs">
-                <span className="w-2.5 h-2.5 bg-terminal-green rounded-full shadow-sm shadow-terminal-green/50"></span>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <span className="flex items-center gap-2 font-mono text-xs transition-colors duration-200 hover:text-foreground cursor-default">
+                <span className="w-2.5 h-2.5 bg-terminal-green rounded-full shadow-md shadow-terminal-green/40 animate-pulse"></span>
                 Low
               </span>
-              <span className="flex items-center gap-2 font-mono text-xs">
-                <span className="w-2.5 h-2.5 bg-terminal-yellow rounded-full shadow-sm shadow-terminal-yellow/50"></span>
+              <span className="flex items-center gap-2 font-mono text-xs transition-colors duration-200 hover:text-foreground cursor-default">
+                <span className="w-2.5 h-2.5 bg-terminal-yellow rounded-full shadow-md shadow-terminal-yellow/40 animate-pulse"></span>
                 Medium
               </span>
-              <span className="flex items-center gap-2 font-mono text-xs">
-                <span className="w-2.5 h-2.5 bg-terminal-orange rounded-full shadow-sm shadow-terminal-orange/50"></span>
+              <span className="flex items-center gap-2 font-mono text-xs transition-colors duration-200 hover:text-foreground cursor-default">
+                <span className="w-2.5 h-2.5 bg-terminal-orange rounded-full shadow-md shadow-terminal-orange/40 animate-pulse"></span>
                 High
               </span>
-              <span className="flex items-center gap-2 font-mono text-xs">
-                <span className="w-2.5 h-2.5 bg-terminal-red rounded-full shadow-sm shadow-terminal-red/50"></span>
+              <span className="flex items-center gap-2 font-mono text-xs transition-colors duration-200 hover:text-foreground cursor-default">
+                <span className="w-2.5 h-2.5 bg-terminal-red rounded-full shadow-md shadow-terminal-red/40 animate-pulse"></span>
                 Critical
               </span>
             </div>
