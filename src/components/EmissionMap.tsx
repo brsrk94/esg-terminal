@@ -349,15 +349,15 @@ export const EmissionMap = ({
   // Token input screen
   if (!mapboxToken) {
     return (
-      <div className="relative h-full min-h-[300px] bg-gradient-to-br from-card to-background flex items-center justify-center p-4">
+      <div className="relative w-full h-full min-h-[300px] bg-gradient-to-br from-card to-background flex items-center justify-center p-4 sm:p-6">
         <div className="text-center max-w-md w-full">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center backdrop-blur border border-primary/20">
-            <MapPin className="w-10 h-10 text-primary" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center backdrop-blur border border-primary/20">
+            <MapPin className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
           </div>
-          <h2 className="font-mono text-xl font-bold text-foreground mb-3">
+          <h2 className="font-mono text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-3">
             Connect Mapbox
           </h2>
-          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed px-2">
             Enter your Mapbox public token to view the interactive emissions map. 
             Get one free at{' '}
             <a
@@ -369,18 +369,18 @@ export const EmissionMap = ({
               mapbox.com
             </a>
           </p>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-3">
             <input
               type="text"
               value={tokenInput}
               onChange={(e) => setTokenInput(e.target.value)}
               placeholder="pk.eyJ1..."
-              className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
             />
             <button
               onClick={handleTokenSubmit}
               disabled={!tokenInput.trim()}
-              className="px-6 py-3 bg-primary text-primary-foreground font-mono text-sm font-bold rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/20"
+              className="w-full px-6 py-3 bg-primary text-primary-foreground font-mono text-sm font-bold rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/20"
             >
               CONNECT
             </button>
@@ -391,9 +391,9 @@ export const EmissionMap = ({
   }
 
   return (
-    <div className="relative h-full min-h-[300px] bg-card overflow-hidden">
+    <div className="relative w-full h-full min-h-[300px] bg-card overflow-hidden">
       {/* Mapbox Container */}
-      <div ref={mapContainer} className="absolute inset-0" />
+      <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
 
       {/* Instruction overlay when no company is selected */}
       {!hasCompanyFilter && mapLoaded && (

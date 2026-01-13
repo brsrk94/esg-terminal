@@ -149,7 +149,7 @@ export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDe
               EMISSIONS BY SCOPE
             </h3>
           </div>
-          <div className="h-[180px]">
+          <div className="h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -157,13 +157,12 @@ export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDe
                   dataKey="value"
                   nameKey="scope"
                   cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={70}
+                  cy="45%"
+                  innerRadius={35}
+                  outerRadius={55}
                   strokeWidth={2}
                   stroke="hsl(var(--background))"
-                  label={({ scope, percent }) => `${scope}: ${(percent * 100).toFixed(1)}%`}
-                  labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
+                  paddingAngle={2}
                 >
                   {scopeData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={scopeColors[index % scopeColors.length]} />
@@ -173,23 +172,36 @@ export const EmissionDetails = ({ facility, onClose, selectedScope }: EmissionDe
                   contentStyle={{
                     backgroundColor: 'hsl(var(--popover))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '0',
+                    borderRadius: '8px',
                     fontFamily: 'monospace',
                     fontSize: '12px',
                     color: 'hsl(var(--popover-foreground))',
+                    padding: '8px 12px',
                   }}
                   itemStyle={{
                     color: 'hsl(var(--popover-foreground))',
                   }}
                   labelStyle={{
                     color: 'hsl(var(--popover-foreground))',
+                    fontWeight: 'bold',
                   }}
-                  formatter={(value: number) => [`${value.toLocaleString()} tons`, '']}
+                  formatter={(value: number, name: string) => [`${value.toLocaleString()} tons`, name]}
                 />
                 <Legend
-                  formatter={(value) => (
-                    <span className="font-mono text-xs text-foreground">{value}</span>
-                  )}
+                  layout="horizontal"
+                  verticalAlign="bottom"
+                  align="center"
+                  wrapperStyle={{ paddingTop: '12px' }}
+                  formatter={(value, entry) => {
+                    const data = scopeData.find(d => d.scope === value);
+                    const total = scopeData.reduce((sum, d) => sum + d.value, 0);
+                    const percent = data && total > 0 ? ((data.value / total) * 100).toFixed(1) : '0';
+                    return (
+                      <span className="font-mono text-xs text-foreground">
+                        {value} ({percent}%)
+                      </span>
+                    );
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>

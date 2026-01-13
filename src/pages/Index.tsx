@@ -60,9 +60,9 @@ const Index = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Map Section */}
-        <div className="flex-1 flex flex-col lg:flex-row min-h-[400px] lg:min-h-0">
+        <div className="flex-1 flex flex-col lg:flex-row h-[50vh] sm:h-[60vh] lg:h-auto min-h-[300px]">
           {/* Map */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-h-[300px]">
             <EmissionMap
               facilities={facilities}
               selectedFacility={selectedFacility}
@@ -73,7 +73,7 @@ const Index = () => {
           </div>
 
           {/* Emission Details Panel (Desktop) */}
-          <div className="hidden lg:block w-[400px] border-l border-border">
+          <div className="hidden lg:block w-[380px] xl:w-[420px] border-l border-border overflow-hidden">
             <EmissionDetails
               facility={selectedFacilityData}
               onClose={() => setSelectedFacility(null)}
@@ -83,7 +83,7 @@ const Index = () => {
         </div>
 
         {/* Stats Sidebar (Desktop) */}
-        <div className="hidden xl:block w-[300px]">
+        <div className="hidden xl:block w-[280px] 2xl:w-[320px] border-l border-border overflow-hidden">
           <StatsSidebar selectedScope={selectedScope} selectedCompanies={selectedCompanies} />
         </div>
       </div>
